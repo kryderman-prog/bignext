@@ -2,20 +2,24 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 export default function SignUpPage() {
   const router = useRouter();
+  const supabase = createClient();
 
- const [form, setForm] = useState({
-  name: "",
-  email: "",
-  password: "",
-  confirmPassword: "",
-  role: "reader",
-}); 
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement>
   ) => {
     setForm({
       ...form,
@@ -26,105 +30,130 @@ export default function SignUpPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log("Form Data:", form);
+    if (loading) return;
 
-    // 🔥 Future: API call here
-    /*
-    await fetch("/api/auth/signup", {
-      method: "POST",
-      body: JSON.stringify(form),
-    });
-    */
+    setLoading(true);
+    setErrorMsg(null); // ✅ reset previous errors
 
+    try {
+      // ✅ Validation
       if (form.password !== form.confirmPassword) {
-        alert("Passwords do not match");
+        setErrorMsg("Passwords do not match");
         return;
       }
 
-      console.log("Form Data:", form);
+      if (form.password.length < 6) {
+        setErrorMsg("Password must be at least 6 characters");
+        return;
+      }
 
-    // Temporary redirect
-    router.push("/landing");
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      if (!sessionData.session) {
+        setErrorMsg("Please verify your email before continuing");
+        return;
+      }
+
+      // ✅ Signup
+      const { data, error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+      });
+
+      if (error) {
+        setErrorMsg(error.message);
+        return;
+      }
+
+      // ⚠️ Email confirmation enabled
+      if (!data.user) {
+        setErrorMsg("Check your email for confirmation");
+        return;
+      }
+
+      // ✅ Insert profile (ONLY if no DB trigger exists)
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .insert({
+          id: data.user.id,
+          name: form.name,
+          role: "reader",
+        });
+
+      if (profileError) {
+        setErrorMsg(profileError.message);
+        return;
+      }
+
+      // ✅ Success
+      router.push("/landing");
+
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      setErrorMsg("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="max-w-md mx-auto mt-10 bg-white p-6 rounded-lg shadow">
       <h1 className="text-2xl font-bold mb-6">Join Blog</h1>
 
+      {/* ✅ Error UI */}
+      {errorMsg && (
+        <div className="bg-red-100 text-red-700 p-2 rounded mb-4">
+          {errorMsg}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
 
-        {/* Name */}
-        <div>
-          <label className="block text-sm mb-1">Name</label>
-          <input
-            name="name"
-            type="text"
-            required
-            value={form.name}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
+        <input
+          name="name"
+          placeholder="Name"
+          value={form.name}
+          onChange={handleChange}
+          className="w-full border rounded px-3 py-2"
+          required
+        />
 
-        {/* Email */}
-        <div>
-          <label className="block text-sm mb-1">Email</label>
-          <input
-            name="email"
-            type="email"
-            required
-            value={form.email}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
+        <input
+          name="email"
+          type="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={handleChange}
+          className="w-full border rounded px-3 py-2"
+          required
+        />
 
-        {/* Password */}
-        <div>
-          <label className="block text-sm mb-1">Password</label>
-          <input
-            name="password"
-            type="password"
-            required
-            value={form.password}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
+        <input
+          name="password"
+          type="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={handleChange}
+          className="w-full border rounded px-3 py-2"
+          required
+        />
 
-        {/* Confirm Password */}
-        <div>
-          <label className="block text-sm mb-1">Confirm Password</label>
-          <input
-            name="confirmPassword"
-            type="password"
-            required
-            value={form.confirmPassword}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
+        <input
+          name="confirmPassword"
+          type="password"
+          placeholder="Confirm Password"
+          value={form.confirmPassword}
+          onChange={handleChange}
+          className="w-full border rounded px-3 py-2"
+          required
+        />
 
-        {/* Role */}
-        <div>
-          <label className="block text-sm mb-1">Role</label>
-          <select
-            name="role"
-            value={form.role}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-          >
-            <option value="reader">Reader</option>
-            <option value="blogger">Blogger</option>
-          </select>
-        </div>
-
-        {/* CTA */}
         <button
           type="submit"
-          className="w-full bg-black text-white py-2 rounded"
+          disabled={loading}
+          className="w-full bg-black text-white py-2 rounded disabled:opacity-50"
         >
-          Join Blog
+          {loading ? "Creating..." : "Join Blog"}
         </button>
       </form>
     </div>
