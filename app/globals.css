@@ -1,26 +1,19 @@
 @import "tailwindcss";
 
+/* Base theme (force light) */
 :root {
-  --background: #ffffff;
-  --foreground: #355c80;
-}
+  --background: #f8fafc;      /* off-white (Tailwind slate-50 style) */
+  --foreground: #1f2937;      /* dark gray (readable) */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #000000;
-    --foreground: #ededed;
-  }
-}
+/* ❌ Remove dark mode override completely */
+/* DO NOT use prefers-color-scheme for now */
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
