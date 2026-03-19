@@ -6,12 +6,13 @@ import { useRouter } from "next/navigation";
 export default function SignUpPage() {
   const router = useRouter();
 
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "reader", // default
-  });
+ const [form, setForm] = useState({
+  name: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  role: "reader",
+}); 
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
