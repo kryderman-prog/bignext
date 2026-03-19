@@ -21,7 +21,7 @@ export default function Navbar() {
         {/* LEFT — Logo */}
         <div className="w-1/4">
           <Link href="/" className="font-bold text-lg">
-            BigNext
+            bigBlog
           </Link>
         </div>
 
