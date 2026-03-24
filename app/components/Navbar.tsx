@@ -24,7 +24,7 @@ export default function Navbar({ user, profile }: NavbarProps) {
         </div>
 
         <div className="w-2/4 flex justify-center">
-          {user && (
+          {user && (  
             <input
               type="text"
               placeholder="Search posts..."
@@ -47,6 +47,13 @@ export default function Navbar({ user, profile }: NavbarProps) {
               <LogoutButton />
             </div>
           )}
+
+        </div>
+        <div className="w-1/4 flex justify-end">
+        {/* 👇 ADD HERE */}
+        {user && (
+          <Link href="/write-blog">Write Blog</Link>
+        )}
         </div>
       </div>
     </nav>
