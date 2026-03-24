@@ -14,17 +14,12 @@ export default function SignUpPage() {
     password: "",
     confirmPassword: "",
   });
-
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,65 +27,64 @@ export default function SignUpPage() {
 
     if (loading) return;
 
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    if (!form.name.trim() || !form.email.trim() || !form.password || !form.confirmPassword) {
+      setErrorMsg("All fields are required.");
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      setErrorMsg("Passwords do not match.");
+      return;
+    }
+
+    if (form.password.length < 6) {
+      setErrorMsg("Password must be at least 6 characters.");
+      return;
+    }
+
     setLoading(true);
-    setErrorMsg(null); // ✅ reset previous errors
 
     try {
-      // ✅ Validation
-      if (form.password !== form.confirmPassword) {
-        setErrorMsg("Passwords do not match");
-        return;
-      }
-
-      if (form.password.length < 6) {
-        setErrorMsg("Password must be at least 6 characters");
-        return;
-      }
-
-      const { data: sessionData } = await supabase.auth.getSession();
-
-      if (!sessionData.session) {
-        setErrorMsg("Please verify your email before continuing");
-        return;
-      }
-
-      // ✅ Signup
       const { data, error } = await supabase.auth.signUp({
-        email: form.email,
+        email: form.email.trim(),
         password: form.password,
       });
 
+      console.log("signUp data:", data, "error:", error);
+
       if (error) {
-        setErrorMsg(error.message);
+        setErrorMsg(error.message || "Unable to sign up.");
         return;
       }
 
-      // ⚠️ Email confirmation enabled
       if (!data.user) {
-        setErrorMsg("Check your email for confirmation");
+        setSuccessMsg("Sign-up created. Please verify your email before signing in.");
+        setErrorMsg(null);
         return;
       }
 
-      // ✅ Insert profile (ONLY if no DB trigger exists)
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .insert({
-          id: data.user.id,
-          name: form.name,
-          role: "reader",
-        });
+      const { error: profileError } = await supabase.from("profiles").insert({
+        id: data.user.id,
+        name: form.name.trim(),
+        role: "reader",
+      });
 
       if (profileError) {
-        setErrorMsg(profileError.message);
+        console.error("profile insert error", profileError);
+        setErrorMsg(profileError.message || "Could not create profile.");
         return;
       }
 
-      // ✅ Success
-      router.push("/landing");
-
+      setSuccessMsg("Account created successfully. Redirecting...");
+      setTimeout(() => {
+        router.push("/landing");
+      }, 800);
     } catch (err) {
-      console.error("Unexpected error:", err);
-      setErrorMsg("Something went wrong. Please try again.");
+      console.error("Unexpected sign up error:", err);
+      setErrorMsg("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -98,17 +92,12 @@ export default function SignUpPage() {
 
   return (
     <div className="max-w-md mx-auto mt-10 bg-white p-6 rounded-lg shadow">
-      <h1 className="text-2xl font-bold mb-6">Join Blog</h1>
+      <h1 className="text-2xl font-bold mb-6">Sign Up</h1>
 
-      {/* ✅ Error UI */}
-      {errorMsg && (
-        <div className="bg-red-100 text-red-700 p-2 rounded mb-4">
-          {errorMsg}
-        </div>
-      )}
+      {errorMsg && <div className="bg-red-100 text-red-700 p-2 rounded mb-4">{errorMsg}</div>}
+      {successMsg && <div className="bg-green-100 text-green-700 p-2 rounded mb-4">{successMsg}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-
         <input
           name="name"
           placeholder="Name"
@@ -153,7 +142,7 @@ export default function SignUpPage() {
           disabled={loading}
           className="w-full bg-black text-white py-2 rounded disabled:opacity-50"
         >
-          {loading ? "Creating..." : "Join Blog"}
+          {loading ? "Creating account..." : "Join Blog"}
         </button>
       </form>
     </div>
