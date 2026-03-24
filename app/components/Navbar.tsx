@@ -1,54 +1,19 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import type { Session } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
+import { LogoutButton } from "./LogoutButton";
 
-export default function Navbar() {
-  const router = useRouter();
-  const supabase = createClient();
+interface Profile {
+  id: string;
+  name: string;
+  [key: string]: any;
+}
 
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(false);
+interface NavbarProps {
+  user: User | null;
+  profile: Profile | null;
+}
 
-  useEffect(() => {
-    const fetchSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
-    };
-
-    fetchSession();
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, [supabase]);
-
-  const handleLogout = async () => {
-    if (loading) return;
-    setLoading(true);
-
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("Sign out error:", error);
-        return;
-      }
-      setSession(null);
-      router.push("/signin");
-    } catch (err) {
-      console.error("Unexpected logout error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+export default function Navbar({ user, profile }: NavbarProps) {
   return (
     <nav className="border-b">
       <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -59,7 +24,7 @@ export default function Navbar() {
         </div>
 
         <div className="w-2/4 flex justify-center">
-          {session && (
+          {user && (
             <input
               type="text"
               placeholder="Search posts..."
@@ -69,15 +34,18 @@ export default function Navbar() {
         </div>
 
         <div className="w-1/4 flex justify-end space-x-4">
-          {!session ? (
+          {!user ? (
             <>
               <Link href="/signin">Sign In</Link>
               <Link href="/signup">Sign Up</Link>
             </>
           ) : (
-            <button onClick={handleLogout} disabled={loading} className="text-sm">
-              {loading ? "Logging out..." : "Logout"}
-            </button>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm font-medium">
+                Hello, {profile?.name || user.email}
+              </span>
+              <LogoutButton />
+            </div>
           )}
         </div>
       </div>
