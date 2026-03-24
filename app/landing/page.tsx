@@ -22,10 +22,21 @@ export default async function LandingPage() {
   }
 
   return (
-    <div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {blogs?.map((blog) => (
-        <Link key={blog.id} href={`/blog/${blog.id}`}>
-          {blog.title}
+        <Link
+          key={blog.id}
+          href={`/blog/${blog.id}`}
+          className="block p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200"
+        >
+          <h2 className="text-xl font-bold mb-3 text-gray-900">{blog.title}</h2>
+          <p className="text-gray-600 mb-4 line-clamp-3">
+            {blog.content.substring(0, 120)}{blog.content.length > 120 ? "..." : ""}
+          </p>
+          <div className="flex justify-between items-center text-sm text-gray-500">
+            <span>By {blog.profiles?.name || "Anonymous"}</span>
+            <span>{new Date(blog.created_at).toLocaleDateString()}</span>
+          </div>
         </Link>
       ))}
     </div>
