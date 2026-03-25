@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import { LogoutButton } from "./LogoutButton";
 
+
+
 interface Profile {
   id: string;
   name: string;
