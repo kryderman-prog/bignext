@@ -48,6 +48,7 @@ export default function WriteBlogPage() {
 
     // 3. Redirect
     router.push("/landing");
+    router.refresh()
   };
 
   return (

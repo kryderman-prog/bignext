@@ -64,6 +64,7 @@ export default function SignInPage() {
       }
 
       router.push("/landing");
+      router.refresh()
     } catch (err) {
       console.error("Unexpected sign in error:", err);
       setError("Network error. Please try again.");

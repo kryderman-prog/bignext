@@ -81,6 +81,7 @@ export default function SignUpPage() {
       setSuccessMsg("Account created successfully. Redirecting...");
       setTimeout(() => {
         router.push("/landing");
+        router.refresh()
       }, 800);
     } catch (err) {
       console.error("Unexpected sign up error:", err);
