@@ -34,7 +34,11 @@ export default async function LandingPage() {
             {blog.content.substring(0, 120)}{blog.content.length > 120 ? "..." : ""}
           </p>
           <div className="flex justify-between items-center text-sm text-gray-500">
-            <span>By {blog.profiles?.name || "Anonymous"}</span>
+            <span>
+              By {((Array.isArray(blog.profiles)
+                ? (blog.profiles[0] as { name?: string })?.name
+                : (blog.profiles as { name?: string } | undefined)?.name) || "Anonymous")}
+            </span>
             <span>{new Date(blog.created_at).toLocaleDateString()}</span>
           </div>
         </Link>

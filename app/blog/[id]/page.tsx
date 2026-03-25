@@ -25,12 +25,16 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ id:
     return <div>Blog not found</div>;
   }
 
+  const profileName = Array.isArray(blog.profiles)
+    ? (blog.profiles[0] as { name?: string })?.name
+    : (blog.profiles as { name?: string } | undefined)?.name;
+
   return (
     <div className="max-w-3xl mx-auto mt-10">
       <h1 className="text-3xl font-bold">{blog.title}</h1>
 
       <p className="text-sm text-gray-500 mt-2">
-        By {blog.profiles?.name || "Unknown"}
+        By {profileName || "Unknown"}
       </p>
 
       <p className="text-xs text-gray-400">
