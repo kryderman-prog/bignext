@@ -37,9 +37,13 @@ export default async function BlogDetailPage({
 
   const isOwner = user?.id === blog.user_id
 
-  const profileName = Array.isArray(blog.profiles)
-    ? blog.profiles[0]?.name
-    : blog.profiles?.name
+const profilesArray = Array.isArray(blog.profiles)
+  ? blog.profiles
+  : blog.profiles
+  ? [blog.profiles]
+  : []
+
+const profileName = profilesArray[0]?.name
 
   return (
     <>
