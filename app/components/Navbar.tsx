@@ -54,7 +54,11 @@ export default function Navbar({ user, profile }: NavbarProps) {
         <div className="w-1/4 flex justify-end">
         {/* 👇 ADD HERE */}
         {user && (
-          <Link href="/write-blog">Write Blog</Link>
+          <>
+          <Link href="/write-blog"> Write Blog </Link>
+          {" | "}
+          <Link href="/landing"> view blogs </Link>
+          </>
         )}
         </div>
       </div>
