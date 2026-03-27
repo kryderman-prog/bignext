@@ -1,8 +1,15 @@
-import { createClient } from "@/lib/supabase/server";
-export default async function BlogDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params; // ✅ FIX
+import { createClient } from "@/lib/supabase/server"
+import Link from "next/link"
+import DeleteButton from "@/app/components/DeleteButton"
 
-  const supabase = await createClient();
+export default async function BlogDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+
+  const supabase = await createClient()
 
   const { data: blog, error } = await supabase
     .from("blogs")
@@ -16,34 +23,55 @@ export default async function BlogDetailPage({ params }: { params: Promise<{ id:
         name
       )
     `)
-    .eq("id", id) // ✅ use extracted id
-    .single();
+    .eq("id", id)
+    .single()
 
   if (error || !blog) {
-    console.log("ERROR:", error);
-    console.log("BLOG:", blog);
-    return <div>Blog not found</div>;
+    console.log("ERROR:", error)
+    return <div>Blog not found</div>
   }
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const isOwner = user?.id === blog.user_id
+
   const profileName = Array.isArray(blog.profiles)
-    ? (blog.profiles[0] as { name?: string })?.name
-    : (blog.profiles as { name?: string } | undefined)?.name;
+    ? blog.profiles[0]?.name
+    : blog.profiles?.name
 
   return (
-    <div className="max-w-3xl mx-auto mt-10">
-      <h1 className="text-3xl font-bold">{blog.title}</h1>
+    <>
+      {/* ✅ MAIN CONTENT */}
+      <div className="max-w-3xl mx-auto mt-10">
+        <h1 className="text-3xl font-bold">{blog.title}</h1>
 
-      <p className="text-sm text-gray-500 mt-2">
-        By {profileName || "Unknown"}
-      </p>
+        <p className="text-sm text-gray-500 mt-2">
+          By {profileName || "Unknown"}
+        </p>
 
-      <p className="text-xs text-gray-400">
-        {new Date(blog.created_at).toLocaleString()}
-      </p>
+        <p className="text-xs text-gray-400">
+          {new Date(blog.created_at).toLocaleString()}
+        </p>
 
-      <div className="mt-6 whitespace-pre-line text-lg leading-relaxed">
-        {blog.content}
+        <div className="mt-6 whitespace-pre-line text-lg leading-relaxed">
+          {blog.content}
+        </div>
       </div>
-    </div>
-  );
+
+      {/* ✅ FLOATING BUTTONS (CORRECT PLACEMENT) */}
+      {isOwner && (
+        <div className="fixed bottom-6 right-6 flex flex-col gap-3">
+          <Link href={`/write-blog?id=${blog.id}`}>
+            <button className="bg-blue-600 text-white px-4 py-2 rounded-full shadow">
+              Edit
+            </button>
+          </Link>
+
+          <DeleteButton blogId={blog.id} />
+        </div>
+      )}
+    </>
+  )
 }
