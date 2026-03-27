@@ -40,6 +40,7 @@ export default function Navbar({ user, profile }: NavbarProps) {
             <>
               <Link href="/signin">Sign In</Link>
               <Link href="/signup">Sign Up</Link>
+              <Link href="/landing">View Blogs</Link>
             </>
           ) : (
             <div className="flex items-center space-x-4">
